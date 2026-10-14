@@ -23,7 +23,7 @@ This project implements and tests the `createNewAssessment` function in the `Cou
 
 - Nandan Patel (S4253850)
 - Ayush Dadhaniya
-- Harshal Pawar
+- Harshal Pawar (S4207724)
 
 Each member is responsible for testing and implementing a set of conditions. Contributions are marked with `// Author:` comments in the code.
 
