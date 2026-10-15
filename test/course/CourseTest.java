@@ -215,7 +215,114 @@ public class CourseTest {
 
     // HARSHAL: tests for C7, C8, C9 and the all-valid case go below this line
 
+// Author: Harshal Pawar S4207724
 
+    // Valid default values, so only the field under test is invalid
+    private static final String H_DESC = "submit your report";   // exactly 3 words (C3 lower boundary)
+    private static final String H_PUBLISH = "01/11/2026 09:00";
+    private static final String H_DUE = "08/11/2026 23:59";
+    private static final String H_HIDE = "15/11/2026 23:59";
+
+    // Helper: only name, points, submission type and grouping vary between my tests
+    private boolean harshalCreate(String name, int points, String submissionType,
+                                  boolean group, String groupingName) {
+        return course.createNewAssessment(name, H_DESC, points, submissionType,
+                group, groupingName, H_PUBLISH, H_DUE, H_HIDE);
+    }
+
+    // Helper: checks that every attribute of a stored assessment matches what was passed in (Note 7)
+    private void assertStored(Assessment a, String name, int points, String submissionType,
+                              boolean group, String groupingName) {
+        assertEquals(name, a.getName());
+        assertEquals(H_DESC, a.getDescription());
+        assertEquals(points, a.getPoints());
+        assertEquals(submissionType, a.getSubmissionType());
+        assertEquals(group, a.isGroup());
+        assertEquals(groupingName, a.getGroupingName());
+        assertEquals(H_PUBLISH, a.getPublishDateTime());
+        assertEquals(H_DUE, a.getDueDateTime());
+        assertEquals(H_HIDE, a.getHideDateTime());
+    }
+
+    // TC-C7: "docx" is just outside the allowed set ("doc" is valid) -> false
+    @Test
+    void testC7_invalidSubmissionTypeRejected() {
+        assertEquals(0, course.getAssessments().size()); // precondition: list is empty
+
+        boolean result = harshalCreate("assignment 4", 10, "docx", false, "");
+
+        assertFalse(result);
+        assertEquals(0, course.getAssessments().size()); // nothing added
+    }
+
+    // TC-C8: group assessment with an empty grouping name -> false
+    @Test
+    void testC8_groupWithoutGroupingNameRejected() {
+        assertEquals(0, course.getAssessments().size()); // precondition: list is empty
+
+        boolean result = harshalCreate("assignment 4", 10, "zip", true, "");
+
+        assertFalse(result);
+        assertEquals(0, course.getAssessments().size()); // nothing added
+    }
+
+    // TC-C9: second group assessment reuses grouping name "team a" -> false
+    @Test
+    void testC9_duplicateGroupingNameRejected() {
+        // Preconditions: empty list, then a group assessment using "team a" is accepted
+        assertEquals(0, course.getAssessments().size());
+        assertTrue(harshalCreate("assignment 4", 10, "zip", true, "team a"));
+        assertEquals(1, course.getAssessments().size());
+
+        // Different name, same grouping name
+        boolean result = harshalCreate("assignment 5", 10, "zip", true, "team a");
+
+        assertFalse(result);
+        assertEquals(1, course.getAssessments().size()); // still only the first one
+    }
+
+    // TC-AV (data a): individual assessment at the lower boundaries
+    // (1 point, 3-word description, "pdf") -> true, all attributes stored
+    @Test
+    void testAllValid_a_individualLowerBoundaries() {
+        assertEquals(0, course.getAssessments().size()); // precondition: list is empty
+
+        boolean result = harshalCreate("quiz 1", 1, "pdf", false, "");
+
+        assertTrue(result);
+        assertEquals(1, course.getAssessments().size());
+        assertStored(course.getAssessments().get(0), "quiz 1", 1, "pdf", false, "");
+    }
+
+    // TC-AV (data b): group assessment at the single-assessment maximum
+    // (50 points, "zip", grouping "team a") -> true, all attributes stored
+    @Test
+    void testAllValid_b_groupUpperBoundary() {
+        assertEquals(0, course.getAssessments().size()); // precondition: list is empty
+
+        boolean result = harshalCreate("project 1", 50, "zip", true, "team a");
+
+        assertTrue(result);
+        assertEquals(1, course.getAssessments().size());
+        assertStored(course.getAssessments().get(0), "project 1", 50, "zip", true, "team a");
+    }
+
+    // TC-AV (data c): second group assessment brings the course total to exactly 100
+    // with a different name and grouping name, using "doc" -> true, both stored
+    @Test
+    void testAllValid_c_totalExactly100() {
+        // Preconditions: empty list, then a 50-point group assessment is accepted
+        assertEquals(0, course.getAssessments().size());
+        assertTrue(harshalCreate("project 1", 50, "zip", true, "team a"));
+        assertEquals(1, course.getAssessments().size());
+
+        boolean result = harshalCreate("project 2", 50, "doc", true, "team b");
+
+        assertTrue(result);
+        assertEquals(2, course.getAssessments().size());
+        assertStored(course.getAssessments().get(0), "project 1", 50, "zip", true, "team a"); // first unchanged
+        assertStored(course.getAssessments().get(1), "project 2", 50, "doc", true, "team b");
+    }
 
 
 }
