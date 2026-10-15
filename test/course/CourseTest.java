@@ -116,10 +116,102 @@ public class CourseTest {
         assertEquals("24/11/2026 00:00", stored.getHideDateTime());
     }
 
-    // AYUSH: tests for C3, C4, C5, C6 go below this line
+    // AYUSH: tests for C3, C4, C5, C6
+    // Author: Ayush Dadhaniya S4199023
+    private static final String A_PUBLISH = "01/11/2026 09:00";
+    private static final String A_DUE = "08/11/2026 23:59";
+    private static final String A_HIDE = "15/11/2026 23:59";
 
+    // Valid defaults keep each test focused on the Ayush-owned condition.
+    private boolean ayushCreate(String name, String description, int points) {
+        return course.createNewAssessment(name, description, points, "pdf", false, "",
+                A_PUBLISH, A_DUE, A_HIDE);
+    }
 
+    // TC-C3a: exactly three words is the minimum valid description.
+    @Test
+    void testC3_minimumThreeWordDescriptionAccepted() {
+        assertEquals(0, course.getAssessments().size()); // precondition
 
+        boolean result = ayushCreate("assignment c3a", "one two three", 10);
+
+        assertTrue(result);
+        assertEquals(1, course.getAssessments().size());
+        assertEquals("one two three", course.getAssessments().get(0).getDescription());
+    }
+
+    // TC-C3b: two words is below the minimum.
+    @Test
+    void testC3_twoWordDescriptionRejected() {
+        assertEquals(0, course.getAssessments().size()); // precondition
+
+        boolean result = ayushCreate("assignment c3b", "one two", 10);
+
+        assertFalse(result);
+        assertEquals(0, course.getAssessments().size());
+    }
+
+    // TC-C4: zero is the boundary value and must be rejected.
+    @Test
+    void testC4_zeroPointsRejected() {
+        assertEquals(0, course.getAssessments().size()); // precondition
+
+        boolean result = ayushCreate("assignment c4", "valid assessment description", 0);
+
+        assertFalse(result);
+        assertEquals(0, course.getAssessments().size());
+    }
+
+    // TC-C5: exactly 50 points is valid for one assessment.
+    @Test
+    void testC5_fiftyPointsAccepted() {
+        assertEquals(0, course.getAssessments().size()); // precondition
+
+        boolean result = ayushCreate("assignment c5", "valid assessment description", 50);
+
+        assertTrue(result);
+        assertEquals(1, course.getAssessments().size());
+        assertEquals(50, course.getAssessments().get(0).getPoints());
+    }
+
+    // TC-C5: 51 points exceeds the single-assessment limit.
+    @Test
+    void testC5_fiftyOnePointsRejected() {
+        assertEquals(0, course.getAssessments().size()); // precondition
+
+        boolean result = ayushCreate("assignment c5b", "valid assessment description", 51);
+
+        assertFalse(result);
+        assertEquals(0, course.getAssessments().size());
+    }
+
+    // TC-C6a: the course total may reach exactly 100 points.
+    @Test
+    void testC6_courseTotalOfOneHundredAccepted() {
+        assertEquals(0, course.getAssessments().size()); // precondition
+        assertTrue(ayushCreate("assignment c6a first", "valid assessment description", 50));
+        assertEquals(1, course.getAssessments().size());
+
+        boolean result = ayushCreate("assignment c6a second", "valid assessment description", 50);
+
+        assertTrue(result);
+        assertEquals(2, course.getAssessments().size());
+        assertEquals(100, course.getAssessments().stream().mapToInt(Assessment::getPoints).sum());
+    }
+
+    // TC-C6b: adding one point beyond the course limit must fail without storing it.
+    @Test
+    void testC6_courseTotalOverOneHundredRejected() {
+        assertEquals(0, course.getAssessments().size()); // precondition
+        assertTrue(ayushCreate("assignment c6b first", "valid assessment description", 50));
+        assertTrue(ayushCreate("assignment c6b second", "valid assessment description", 50));
+        assertEquals(2, course.getAssessments().size());
+
+        boolean result = ayushCreate("assignment c6b third", "valid assessment description", 1);
+
+        assertFalse(result);
+        assertEquals(2, course.getAssessments().size());
+    }
 
     // HARSHAL: tests for C7, C8, C9 and the all-valid case go below this line
 
