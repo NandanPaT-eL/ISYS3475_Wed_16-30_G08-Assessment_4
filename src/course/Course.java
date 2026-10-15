@@ -71,9 +71,11 @@ public class Course {
         valid = valid && areDatesFormatValid(publishDateTime, dueDateTime, hideDateTime);
         valid = valid && areDatesInOrder(publishDateTime, dueDateTime, hideDateTime);
 
-        // AYUSH: C3, C4, C5, C6 (Ayush adds the calls here)
-
-
+        // AYUSH: C3, C4, C5, C6
+        valid = valid && hasAtLeastThreeWords(description);
+        valid = valid && hasPositivePoints(points);
+        valid = valid && doesNotExceedAssessmentPointLimit(points);
+        valid = valid && doesNotExceedCoursePointLimit(points);
 
         // HARSHAL: C7, C8, C9 (Harshal adds the calls here)
 
@@ -143,9 +145,32 @@ public class Course {
         return hide.isAfter(due) && due.isAfter(publish);
     }
 
-    // AYUSH: validator methods for C3, C4, C5, C6 go below this line
+    // AYUSH: C3, C4, C5, C6
+    // Author: Ayush Dadhaniya S4199023
 
+    // C3: A description is valid when it contains at least three words.
+    private boolean hasAtLeastThreeWords(String description) {
+        return description != null && description.trim().split("\\s+").length >= 3;
+    }
 
+    // C4: Assessment points must be greater than zero.
+    private boolean hasPositivePoints(int points) {
+        return points > 0;
+    }
+
+    // C5: A single assessment cannot exceed 50 points.
+    private boolean doesNotExceedAssessmentPointLimit(int points) {
+        return points <= 50;
+    }
+
+    // C6: The total, including this assessment, cannot exceed 100 points.
+    private boolean doesNotExceedCoursePointLimit(int points) {
+        long totalPoints = points;
+        for (Assessment assessment : assessments) {
+            totalPoints += assessment.getPoints();
+        }
+        return totalPoints <= 100;
+    }
 
     // HARSHAL: validator methods for C7, C8, C9 go below this line
 
