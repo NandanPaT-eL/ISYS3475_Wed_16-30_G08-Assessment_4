@@ -78,7 +78,9 @@ public class Course {
         valid = valid && doesNotExceedCoursePointLimit(points);
 
         // HARSHAL: C7, C8, C9 (Harshal adds the calls here)
-
+        valid = valid && isSubmissionTypeValid(submissionType);
+        valid = valid && isGroupingNameProvided(group, groupingName);
+        valid = valid && isGroupingNameUnique(group, groupingName);
 
 
         // Only create and store the Assessment if every condition passed.
@@ -173,7 +175,40 @@ public class Course {
     }
 
     // HARSHAL: validator methods for C7, C8, C9 go below this line
+    // Author: Harshal Pawar S4207724
 
+    // C7: The only accepted submission types (all inputs are lowercase).
+    private static final List<String> ALLOWED_SUBMISSION_TYPES = List.of("pdf", "zip", "doc");
+
+    // C7: Submission type must be exactly one of "pdf", "zip" or "doc".
+    // Anything else (e.g. "docx", "", null) is rejected.
+    private boolean isSubmissionTypeValid(String submissionType) {
+        return submissionType != null && ALLOWED_SUBMISSION_TYPES.contains(submissionType);
+    }
+
+    // C8: A group assessment must have a grouping name (not null, empty or only spaces).
+    // An individual assessment does not need one, so it always passes this check.
+    private boolean isGroupingNameProvided(boolean group, String groupingName) {
+        if (!group) {
+            return true; // individual assessment, grouping name not required
+        }
+        return groupingName != null && !groupingName.trim().isEmpty();
+    }
+
+    // C9: A group assessment's grouping name must not already be used by
+    // another group assessment in the list. Individual assessments are skipped,
+    // because they have no grouping (their grouping name is usually blank).
+    private boolean isGroupingNameUnique(boolean group, String groupingName) {
+        if (!group) {
+            return true; // no grouping, nothing to compare
+        }
+        for (Assessment existing : assessments) {
+            if (existing.isGroup() && groupingName.equals(existing.getGroupingName())) {
+                return false; // grouping name already taken
+            }
+        }
+        return true;
+    }
 
 
 }
